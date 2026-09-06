@@ -1,13 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import io from 'socket.io-client';
+import RideMap from '../../components/map/RideMap';
+import { startLiveLocationTracking, stopLiveLocationTracking } from '../../services/location/locationService';
 
 const CaptainActiveRideScreen = ({ route, navigation }) => {
   const { ride } = route.params || {};
 
-  const isOngoing = ride?.status === 'ONGOING';
+  const [currentRide, setCurrentRide] = useState(ride);
+  const [captainLocation, setCaptainLocation] = useState(ride?.captainLocation || null);
+
+  const isOngoing = currentRide?.status === 'ONGOING';
+
+  useEffect(() => {
+    if (!ride?._id && !ride?.id) return;
+
+    const rideId = ride._id || ride.id;
+
+    let socket;
+    let watchId;
+
+    try {
+      socket = io('http://10.0.2.2:5000');
+      socket.emit('join_ride_room', rideId);
+
+      // Start live GPS tracking & emitting coordinates to customer room
+      startLiveLocationTracking(rideId, socket, (newLocation) => {
+        setCaptainLocation(newLocation);
+      }).then(id => {
+        watchId = id;
+      });
+    } catch (e) {
+      console.log('Captain socket tracking offline fallback');
+    }
+
+    return () => {
+      if (watchId) stopLiveLocationTracking(watchId);
+      if (socket) socket.disconnect();
+    };
+  }, [ride]);
 
   const handleCompleteRide = () => {
-    Alert.alert('Ride Completed', `Fare collected: ₹${ride?.fare || 0}. Returning to dashboard.`, [
+    Alert.alert('Ride Completed', `Fare collected: ₹${currentRide?.fare || 0}. Returning to dashboard.`, [
       {
         text: 'OK',
         onPress: () => navigation.navigate('CaptainHome'),
@@ -15,7 +49,7 @@ const CaptainActiveRideScreen = ({ route, navigation }) => {
     ]);
   };
 
-  if (!ride) {
+  if (!currentRide) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyContainer}>
@@ -33,67 +67,79 @@ const CaptainActiveRideScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Captain Active Trip</Text>
-        <Text style={styles.subtitle}>
-          {isOngoing ? 'Trip in progress - Navigate to dropoff' : 'En route to customer pickup location'}
-        </Text>
+      {/* Route Map View with Live Captain Movement */}
+      <View style={styles.mapContainer}>
+        <RideMap
+          location={currentRide.pickupLocation}
+          destination={currentRide.dropoffLocation}
+          captainLocation={captainLocation}
+        />
       </View>
 
-      <View style={styles.card}>
-        <View style={styles.passengerRow}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{ride.customerName ? ride.customerName.charAt(0) : 'P'}</Text>
-          </View>
-          <View style={styles.passengerInfo}>
-            <Text style={styles.passengerName}>{ride.customerName || 'Passenger'}</Text>
-            <Text style={styles.passengerPhone}>{ride.customerPhone || 'Contact details'}</Text>
-          </View>
-          <Text style={styles.fare}>₹{ride.fare || 0}</Text>
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.locationContainer}>
-          <View style={[styles.dot, styles.greenDot]} />
-          <Text style={styles.locationText}>Pickup: {ride.pickupLocation?.address || 'Pickup Point'}</Text>
-        </View>
-
-        <View style={styles.locationContainer}>
-          <View style={[styles.dot, styles.redDot]} />
-          <Text style={styles.locationText}>Dropoff: {ride.dropoffLocation?.address || 'Destination'}</Text>
-        </View>
-
-        <View style={styles.statusBadgeRow}>
-          <Text style={styles.statusLabel}>Trip Status:</Text>
-          <Text style={[styles.statusBadge, isOngoing ? styles.statusGreen : styles.statusBlue]}>
-            {ride?.status || 'ARRIVED'}
+      {/* Driver Controls Panel */}
+      <View style={styles.infoPanel}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Captain Active Trip</Text>
+          <Text style={styles.subtitle}>
+            {isOngoing ? 'Trip in progress - Navigate to dropoff' : 'En route to customer pickup location'}
           </Text>
         </View>
+
+        <View style={styles.card}>
+          <View style={styles.passengerRow}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{currentRide.customerName ? currentRide.customerName.charAt(0) : 'P'}</Text>
+            </View>
+            <View style={styles.passengerInfo}>
+              <Text style={styles.passengerName}>{currentRide.customerName || 'Passenger'}</Text>
+              <Text style={styles.passengerPhone}>{currentRide.customerPhone || 'Contact details'}</Text>
+            </View>
+            <Text style={styles.fare}>₹{currentRide.fare || 0}</Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.locationContainer}>
+            <View style={[styles.dot, styles.greenDot]} />
+            <Text style={styles.locationText} numberOfLines={1}>Pickup: {currentRide.pickupLocation?.address || 'Pickup Point'}</Text>
+          </View>
+
+          <View style={styles.locationContainer}>
+            <View style={[styles.dot, styles.redDot]} />
+            <Text style={styles.locationText} numberOfLines={1}>Dropoff: {currentRide.dropoffLocation?.address || 'Destination'}</Text>
+          </View>
+
+          <View style={styles.statusBadgeRow}>
+            <Text style={styles.statusLabel}>Trip Status:</Text>
+            <Text style={[styles.statusBadge, isOngoing ? styles.statusGreen : styles.statusBlue]}>
+              {currentRide?.status || 'ACCEPTED'}
+            </Text>
+          </View>
+        </View>
+
+        {!isOngoing ? (
+          <TouchableOpacity
+            style={styles.scanButton}
+            onPress={() => navigation.navigate('QRScannerScreen', { rideId: currentRide?._id || currentRide?.id })}
+          >
+            <Text style={styles.scanButtonText}>Scan Customer QR Code to Start Ride</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.completeButton}
+            onPress={handleCompleteRide}
+          >
+            <Text style={styles.completeButtonText}>Complete Ride & Collect Fare</Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          style={styles.homeButton}
+          onPress={() => navigation.navigate('CaptainHome')}
+        >
+          <Text style={styles.homeButtonText}>Return to Dashboard</Text>
+        </TouchableOpacity>
       </View>
-
-      {!isOngoing ? (
-        <TouchableOpacity
-          style={styles.scanButton}
-          onPress={() => navigation.navigate('QRScannerScreen', { rideId: ride?._id || ride?.id })}
-        >
-          <Text style={styles.scanButtonText}>Scan Customer QR Code to Start Ride</Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          style={styles.completeButton}
-          onPress={handleCompleteRide}
-        >
-          <Text style={styles.completeButtonText}>Complete Ride & Collect Fare</Text>
-        </TouchableOpacity>
-      )}
-
-      <TouchableOpacity
-        style={styles.homeButton}
-        onPress={() => navigation.navigate('CaptainHome')}
-      >
-        <Text style={styles.homeButtonText}>Return to Dashboard</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -102,10 +148,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0F172A',
+  },
+  mapContainer: {
+    flex: 1,
+  },
+  infoPanel: {
+    backgroundColor: '#1E293B',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     padding: 20,
-    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
   },
   emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
@@ -116,34 +173,32 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     color: '#F8FAFC',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#94A3B8',
-    marginTop: 4,
+    marginTop: 2,
   },
   card: {
-    backgroundColor: '#1E293B',
-    padding: 20,
-    borderRadius: 18,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#334155',
+    backgroundColor: '#0F172A',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
   },
   passengerRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#16A34A',
     justifyContent: 'center',
     alignItems: 'center',
@@ -151,41 +206,41 @@ const styles = StyleSheet.create({
   avatarText: {
     color: '#FFFFFF',
     fontWeight: '800',
-    fontSize: 20,
+    fontSize: 18,
   },
   passengerInfo: {
     flex: 1,
     marginLeft: 12,
   },
   passengerName: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
     color: '#F8FAFC',
   },
   passengerPhone: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#94A3B8',
     marginTop: 2,
   },
   fare: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: '#38BDF8',
   },
   divider: {
     height: 1,
     backgroundColor: '#334155',
-    marginVertical: 14,
+    marginVertical: 10,
   },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     marginRight: 10,
   },
   greenDot: {
@@ -195,25 +250,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444',
   },
   locationText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#E2E8F0',
+    flex: 1,
   },
   statusBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 8,
   },
   statusLabel: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#94A3B8',
-    marginRight: 8,
+    marginRight: 6,
   },
   statusBadge: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 6,
   },
   statusBlue: {
@@ -226,38 +282,38 @@ const styles = StyleSheet.create({
   },
   scanButton: {
     backgroundColor: '#16A34A',
-    paddingVertical: 16,
-    borderRadius: 14,
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   scanButtonText: {
     color: '#FFFFFF',
     fontWeight: '800',
-    fontSize: 16,
+    fontSize: 15,
   },
   completeButton: {
     backgroundColor: '#22C55E',
-    paddingVertical: 16,
-    borderRadius: 14,
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   completeButtonText: {
     color: '#FFFFFF',
     fontWeight: '800',
-    fontSize: 16,
+    fontSize: 15,
   },
   homeButton: {
     backgroundColor: '#334155',
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
     alignItems: 'center',
   },
   homeButtonText: {
     color: '#F8FAFC',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 13,
   },
 });
 
