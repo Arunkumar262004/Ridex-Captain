@@ -53,7 +53,7 @@ const EarningsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF',
   },
   content: {
     padding: 20,
@@ -67,17 +67,17 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   backText: {
-    color: '#38BDF8',
+    color: '#FF6600',
     fontSize: 16,
     fontWeight: '700',
   },
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: '#0F172A',
   },
   heroCard: {
-    backgroundColor: '#16A34A',
+    backgroundColor: '#FFB800',
     borderRadius: 20,
     padding: 24,
     alignItems: 'center',
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   heroLabel: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#DCFCE7',
+    color: '#FFF3D6',
     letterSpacing: 1.5,
   },
   heroAmount: {
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   heroStatLabel: {
     fontSize: 12,
-    color: '#DCFCE7',
+    color: '#FFF3D6',
     marginTop: 2,
   },
   statDivider: {
@@ -125,20 +125,20 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#F8FAFC',
+    color: '#0F172A',
     marginBottom: 12,
   },
   emptyCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#E2E8F0',
   },
   emptyText: {
     fontSize: 14,
-    color: '#94A3B8',
+    color: '#64748B',
   },
 });
 

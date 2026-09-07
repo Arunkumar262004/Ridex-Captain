@@ -47,7 +47,7 @@ const RideMap = ({ location, destination }) => {
       {dropoffCoords && (
         <Polyline
           coordinates={[pickupCoords, dropoffCoords]}
-          strokeColor="#38BDF8"
+          strokeColor="#FF6600"
           strokeWidth={4}
         />
       )}

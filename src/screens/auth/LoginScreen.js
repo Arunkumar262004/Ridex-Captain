@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
 
   registerText: {
     marginLeft: 5,
-    color: colors.customer,
+    color: colors.primary,
     fontWeight: '700',
     fontSize: 14,
   },

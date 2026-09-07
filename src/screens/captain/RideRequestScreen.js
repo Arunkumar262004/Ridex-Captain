@@ -92,7 +92,7 @@ const RideRequestScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF',
   },
   content: {
     padding: 20,
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#94A3B8',
+    color: '#64748B',
     marginBottom: 20,
   },
   header: {
@@ -117,20 +117,20 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: '#0F172A',
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#94A3B8',
+    color: '#64748B',
     marginTop: 4,
   },
   card: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#E2E8F0',
   },
   riderRow: {
     flexDirection: 'row',
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#16A34A',
+    backgroundColor: '#FF6600',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -156,21 +156,21 @@ const styles = StyleSheet.create({
   riderName: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#F8FAFC',
+    color: '#0F172A',
   },
   riderRating: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: '#64748B',
     marginTop: 2,
   },
   fare: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#38BDF8',
+    color: '#FF6600',
   },
   divider: {
     height: 1,
-    backgroundColor: '#334155',
+    backgroundColor: '#E2E8F0',
     marginVertical: 16,
   },
   locationRow: {
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   lineConnector: {
     width: 2,
     height: 20,
-    backgroundColor: '#334155',
+    backgroundColor: '#E2E8F0',
     marginLeft: 5,
     marginVertical: 2,
   },
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#E2E8F0',
+    color: '#0F172A',
     marginTop: 2,
   },
   actionContainer: {
@@ -218,19 +218,19 @@ const styles = StyleSheet.create({
   },
   declineButton: {
     flex: 1,
-    backgroundColor: '#334155',
+    backgroundColor: '#F1F5F9',
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
   },
   declineText: {
-    color: '#94A3B8',
+    color: '#64748B',
     fontWeight: '700',
     fontSize: 16,
   },
   acceptButton: {
     flex: 2,
-    backgroundColor: '#16A34A',
+    backgroundColor: '#FF6600',
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',

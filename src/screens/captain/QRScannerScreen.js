@@ -79,7 +79,7 @@ const QRScannerScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF',
     padding: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -87,12 +87,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#0F172A',
     marginBottom: 6,
   },
   subTitle: {
     fontSize: 14,
-    color: '#94A3B8',
+    color: '#64748B',
     textAlign: 'center',
     marginBottom: 24,
     paddingHorizontal: 16,
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   verifyButton: {
-    backgroundColor: '#16A34A',
+    backgroundColor: '#FF6600',
     width: '100%',
     paddingVertical: 16,
     borderRadius: 14,
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   cancelText: {
-    color: '#94A3B8',
+    color: '#64748B',
     fontSize: 15,
   },
 });

@@ -9,18 +9,8 @@ const loginUser = async ({email, password}) => {
   return response.data;
 };
 
-const registerUser = async ({
-  name,
-  email,
-  phone,
-  password,
-}) => {
-  const response = await api.post('/auth/register', {
-    name,
-    email,
-    phone,
-    password,
-  });
+const registerUser = async (payload) => {
+  const response = await api.post('/auth/register', payload);
 
   return response.data;
 };

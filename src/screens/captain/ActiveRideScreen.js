@@ -147,18 +147,18 @@ const CaptainActiveRideScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF',
   },
   mapContainer: {
     flex: 1,
   },
   infoPanel: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#E2E8F0',
   },
   emptyContainer: {
     flex: 1,
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontWeight: '700',
     marginBottom: 20,
   },
@@ -178,15 +178,15 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: '#0F172A',
   },
   subtitle: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: '#64748B',
     marginTop: 2,
   },
   card: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFF8F3',
     padding: 16,
     borderRadius: 16,
     marginBottom: 16,
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#16A34A',
+    backgroundColor: '#FF6600',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -215,21 +215,21 @@ const styles = StyleSheet.create({
   passengerName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#F8FAFC',
+    color: '#0F172A',
   },
   passengerPhone: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#64748B',
     marginTop: 2,
   },
   fare: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#38BDF8',
+    color: '#FF6600',
   },
   divider: {
     height: 1,
-    backgroundColor: '#334155',
+    backgroundColor: '#E2E8F0',
     marginVertical: 10,
   },
   locationContainer: {
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#E2E8F0',
+    color: '#0F172A',
     flex: 1,
   },
   statusBadgeRow: {
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#64748B',
     marginRight: 6,
   },
   statusBadge: {
@@ -273,15 +273,15 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   statusBlue: {
-    backgroundColor: '#1E3A8A',
-    color: '#60A5FA',
+    backgroundColor: '#7C2D12',
+    color: '#FDBA74',
   },
   statusGreen: {
     backgroundColor: '#14532D',
     color: '#4ADE80',
   },
   scanButton: {
-    backgroundColor: '#16A34A',
+    backgroundColor: '#FF6600',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   completeButton: {
-    backgroundColor: '#22C55E',
+    backgroundColor: '#FF8800',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
@@ -305,13 +305,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   homeButton: {
-    backgroundColor: '#334155',
+    backgroundColor: '#F1F5F9',
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: 'center',
   },
   homeButtonText: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontWeight: '700',
     fontSize: 13,
   },

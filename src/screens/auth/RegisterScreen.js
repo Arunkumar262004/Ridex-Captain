@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   View,
@@ -15,10 +15,12 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import AppInput from '../../components/common/AppInput';
 import AppButton from '../../components/common/AppButton';
+import SelectField from '../../components/common/SelectField';
 
 import colors from '../../constants/colors';
 
 import { registerUser } from '../../services/api/authApi';
+import { getVehicleBrands, getVehicleCategories, getLocationTree } from '../../services/api/masterDataApi';
 import { loginSuccess } from '../../app/store/slices/authSlice';
 import { saveAuthData } from '../../utils/storage';
 
@@ -37,10 +39,86 @@ const RegisterScreen = ({ navigation }) => {
 
   // Vehicle Details
   const [vehicleNo, setVehicleNo] = useState('');
-  const [vehicleBrand, setVehicleBrand] = useState('Honda');
+  const [vehicleBrand, setVehicleBrand] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
-  const [vehicleCategory, setVehicleCategory] = useState('Bike');
+  const [vehicleCategory, setVehicleCategory] = useState('');
   const [isGear, setIsGear] = useState(false); // false = Non-Gear, true = Gear
+
+  // Operating Location (Country -> State -> City -> Zone, from live Master Data)
+  const [locationTree, setLocationTree] = useState({});
+  const [country, setCountry] = useState('');
+  const [state, setStateName] = useState('');
+  const [city, setCity] = useState('');
+  const [zone, setZone] = useState('');
+
+  // Master Data pulled live from the Admin-managed backend
+  const [brandOptions, setBrandOptions] = useState([]);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+
+  useEffect(() => {
+    const loadMasterData = async () => {
+      try {
+        const [brandsRes, categoriesRes, locationsRes] = await Promise.all([
+          getVehicleBrands(),
+          getVehicleCategories(),
+          getLocationTree(),
+        ]);
+
+        const brands = (brandsRes?.data || []).map((b) => b.name);
+        const categories = (categoriesRes?.data || []).map((c) => c.name);
+        const tree = locationsRes?.data || {};
+
+        setBrandOptions(brands);
+        setCategoryOptions(categories);
+        setLocationTree(tree);
+
+        if (brands.length > 0) setVehicleBrand(brands[0]);
+        if (categories.length > 0) setVehicleCategory(categories[0]);
+
+        const firstCountry = Object.keys(tree)[0] || '';
+        const firstState = Object.keys(tree[firstCountry] || {})[0] || '';
+        const firstCity = Object.keys(tree[firstCountry]?.[firstState] || {})[0] || '';
+        const firstZone = tree[firstCountry]?.[firstState]?.[firstCity]?.[0] || '';
+        setCountry(firstCountry);
+        setStateName(firstState);
+        setCity(firstCity);
+        setZone(firstZone);
+      } catch (error) {
+        // Registration remains usable even if master data is briefly unreachable;
+        // brand/category/location fields simply stay empty until retried.
+      }
+    };
+
+    loadMasterData();
+  }, []);
+
+  const stateOptions = Object.keys(locationTree[country] || {});
+  const cityOptions = Object.keys(locationTree[country]?.[state] || {});
+  const zoneOptions = locationTree[country]?.[state]?.[city] || [];
+
+  const handleCountrySelect = (val) => {
+    const firstState = Object.keys(locationTree[val] || {})[0] || '';
+    const firstCity = Object.keys(locationTree[val]?.[firstState] || {})[0] || '';
+    const firstZone = locationTree[val]?.[firstState]?.[firstCity]?.[0] || '';
+    setCountry(val);
+    setStateName(firstState);
+    setCity(firstCity);
+    setZone(firstZone);
+  };
+
+  const handleStateSelect = (val) => {
+    const firstCity = Object.keys(locationTree[country]?.[val] || {})[0] || '';
+    const firstZone = locationTree[country]?.[val]?.[firstCity]?.[0] || '';
+    setStateName(val);
+    setCity(firstCity);
+    setZone(firstZone);
+  };
+
+  const handleCitySelect = (val) => {
+    const firstZone = locationTree[country]?.[state]?.[val]?.[0] || '';
+    setCity(val);
+    setZone(firstZone);
+  };
 
   const handleAadharChange = (text) => {
     const numeric = text.replace(/\D/g, '').slice(0, 12);
@@ -94,13 +172,17 @@ const RegisterScreen = ({ navigation }) => {
         phone: phone.trim(),
         email: email.trim().toLowerCase(),
         password,
+        role: 'CAPTAIN',
         aadharNo,
         vehicleNo: vehicleNo.trim().toUpperCase(),
         vehicleBrand,
         vehicleModel: vehicleModel.trim(),
         vehicleCategory,
         isGear,
-        status: 'PENDING_VERIFICATION',
+        country,
+        state,
+        city,
+        zone,
         source: 'App Self Registration',
       };
 
@@ -150,8 +232,21 @@ const RegisterScreen = ({ navigation }) => {
 
           <Text style={styles.sectionHeader}>2. Vehicle Details</Text>
           <AppInput label="Vehicle Registration No" value={vehicleNo} onChangeText={setVehicleNo} placeholder="e.g. TN 01 AB 1234" />
-          <AppInput label="Vehicle Brand" value={vehicleBrand} onChangeText={setVehicleBrand} placeholder="e.g. Honda / Hero / TVS" />
+          <SelectField
+            label="Vehicle Brand"
+            value={vehicleBrand}
+            options={brandOptions}
+            onSelect={setVehicleBrand}
+            placeholder="Select vehicle brand"
+          />
           <AppInput label="Vehicle Model" value={vehicleModel} onChangeText={setVehicleModel} placeholder="e.g. Activa 6G / Pulsar 150" />
+          <SelectField
+            label="Vehicle Category"
+            value={vehicleCategory}
+            options={categoryOptions}
+            onSelect={setVehicleCategory}
+            placeholder="Select vehicle category"
+          />
 
           <Text style={styles.inputLabel}>Vehicle Transmission Type</Text>
           <View style={styles.radioRow}>
@@ -169,7 +264,37 @@ const RegisterScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.sectionHeader}>3. Account Security</Text>
+          <Text style={styles.sectionHeader}>3. Operating Location</Text>
+          <SelectField
+            label="Country"
+            value={country}
+            options={Object.keys(locationTree)}
+            onSelect={handleCountrySelect}
+            placeholder="Select country"
+          />
+          <SelectField
+            label="State"
+            value={state}
+            options={stateOptions}
+            onSelect={handleStateSelect}
+            placeholder="Select state"
+          />
+          <SelectField
+            label="City"
+            value={city}
+            options={cityOptions}
+            onSelect={handleCitySelect}
+            placeholder="Select city"
+          />
+          <SelectField
+            label="Zone"
+            value={zone}
+            options={zoneOptions}
+            onSelect={setZone}
+            placeholder="Select zone"
+          />
+
+          <Text style={styles.sectionHeader}>4. Account Security</Text>
           <AppInput label="Password" value={password} onChangeText={setPassword} placeholder="Create password" secureTextEntry />
           <AppInput label="Confirm Password" value={confirmPassword} onChangeText={setConfirmPassword} placeholder="Confirm password" secureTextEntry />
 
@@ -212,7 +337,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0284C7',
+    color: '#FF6600',
     marginTop: 16,
     marginBottom: 10,
     borderBottomWidth: 1,
@@ -241,8 +366,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   radioSelected: {
-    borderColor: '#0284C7',
-    backgroundColor: '#E0F2FE',
+    borderColor: '#FF6600',
+    backgroundColor: '#FFF3E6',
   },
   radioText: {
     fontSize: 12.5,
@@ -250,7 +375,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   radioTextSelected: {
-    color: '#0284C7',
+    color: '#FF6600',
     fontWeight: '700',
   },
   form: {
@@ -268,7 +393,7 @@ const styles = StyleSheet.create({
   },
   loginText: {
     marginLeft: 6,
-    color: '#0284C7',
+    color: '#FF6600',
     fontWeight: '700',
     fontSize: 14,
   },

@@ -24,7 +24,7 @@ const CaptainHomeScreen = ({ navigation }) => {
             <Switch
               value={isOnline}
               onValueChange={setIsOnline}
-              trackColor={{ false: '#334155', true: '#16A34A' }}
+              trackColor={{ false: '#CBD5E1', true: '#16A34A' }}
               thumbColor="#FFFFFF"
             />
           </View>
@@ -73,7 +73,7 @@ const CaptainHomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF',
   },
   content: {
     padding: 20,
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: '#0F172A',
   },
   onlineToggleRow: {
     flexDirection: 'row',
@@ -103,20 +103,20 @@ const styles = StyleSheet.create({
     color: '#22C55E',
   },
   offlineText: {
-    color: '#94A3B8',
+    color: '#64748B',
   },
   earningsCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 24,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#E2E8F0',
   },
   cardLabel: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#94A3B8',
+    color: '#64748B',
     letterSpacing: 1.5,
     marginBottom: 16,
     textAlign: 'center',
@@ -132,36 +132,36 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: '#0F172A',
   },
   statLabel: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#64748B',
     marginTop: 4,
   },
   statDivider: {
     width: 1,
     height: 30,
-    backgroundColor: '#334155',
+    backgroundColor: '#E2E8F0',
   },
   activeContainer: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#FFF8F3',
     borderRadius: 18,
     padding: 24,
     alignItems: 'center',
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#E2E8F0',
   },
   searchingTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#F8FAFC',
+    color: '#0F172A',
     textAlign: 'center',
   },
   searchingSubtitle: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: '#64748B',
     textAlign: 'center',
     marginTop: 6,
   },
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   offlineTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: '#64748B',
   },
   offlineSubtitle: {
     fontSize: 13,
@@ -183,13 +183,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   navBtn: {
-    backgroundColor: '#334155',
+    backgroundColor: '#F1F5F9',
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: 'center',
   },
   navBtnText: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontWeight: '700',
     fontSize: 15,
   },

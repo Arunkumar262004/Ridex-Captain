@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   },
 
   selectedCard: {
-    borderColor: colors.customer,
+    borderColor: colors.primary,
     borderWidth: 2,
   },
 
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     width: 25,
     height: 25,
     borderRadius: 20,
-    backgroundColor: colors.customer,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
