@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,19 +6,45 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
+import { acceptRide, rejectRide } from '../../services/api/rideApi';
 
 const RideRequestScreen = ({ route, navigation }) => {
   const { ride } = route.params || {};
+  const [responding, setResponding] = useState(null); // 'accept' | 'decline' | null
 
-  const handleAccept = () => {
-    if (ride) {
-      navigation.navigate('ActiveRideScreen', { ride: { ...ride, status: 'ACCEPTED' } });
+  const rideId = ride?._id || ride?.id;
+
+  const handleAccept = async () => {
+    if (!ride || responding) return;
+
+    setResponding('accept');
+    try {
+      const response = await acceptRide(rideId);
+      const acceptedRide = response.data || response;
+      navigation.replace('ActiveRideScreen', { ride: acceptedRide });
+    } catch (error) {
+      // Someone else likely grabbed it first, or it's no longer biddable.
+      console.log('Accept ride failed:', error?.response?.data || error.message);
+      navigation.goBack();
+    } finally {
+      setResponding(null);
     }
   };
 
-  const handleDecline = () => {
-    navigation.goBack();
+  const handleDecline = async () => {
+    if (!ride || responding) return;
+
+    setResponding('decline');
+    try {
+      await rejectRide(rideId);
+    } catch (error) {
+      console.log('Reject ride failed:', error?.response?.data || error.message);
+    } finally {
+      setResponding(null);
+      navigation.goBack();
+    }
   };
 
   if (!ride) {
@@ -76,12 +102,28 @@ const RideRequestScreen = ({ route, navigation }) => {
         </View>
 
         <View style={styles.actionContainer}>
-          <TouchableOpacity style={styles.declineButton} onPress={handleDecline}>
-            <Text style={styles.declineText}>Decline</Text>
+          <TouchableOpacity
+            style={[styles.declineButton, responding && styles.buttonDisabled]}
+            onPress={handleDecline}
+            disabled={!!responding}
+          >
+            {responding === 'decline' ? (
+              <ActivityIndicator color="#64748B" />
+            ) : (
+              <Text style={styles.declineText}>Decline</Text>
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.acceptButton} onPress={handleAccept}>
-            <Text style={styles.acceptText}>Accept Ride</Text>
+          <TouchableOpacity
+            style={[styles.acceptButton, responding && styles.buttonDisabled]}
+            onPress={handleAccept}
+            disabled={!!responding}
+          >
+            {responding === 'accept' ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.acceptText}>Accept Ride</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -239,6 +281,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 16,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });
 

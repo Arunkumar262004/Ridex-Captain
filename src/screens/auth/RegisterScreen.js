@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   Alert,
   KeyboardAvoidingView,
@@ -10,6 +11,8 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -23,6 +26,13 @@ import { registerUser } from '../../services/api/authApi';
 import { getVehicleBrands, getVehicleCategories, getLocationTree } from '../../services/api/masterDataApi';
 import { loginSuccess } from '../../app/store/slices/authSlice';
 import { saveAuthData } from '../../utils/storage';
+
+const DOCUMENT_TYPES = [
+  { field: 'licenseImage', label: 'Driving License' },
+  { field: 'rcImage', label: 'Vehicle RC Book' },
+  { field: 'aadharImage', label: 'Aadhar Card Photo' },
+  { field: 'insuranceImage', label: 'Vehicle Insurance' },
+];
 
 const RegisterScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -43,6 +53,14 @@ const RegisterScreen = ({ navigation }) => {
   const [vehicleModel, setVehicleModel] = useState('');
   const [vehicleCategory, setVehicleCategory] = useState('');
   const [isGear, setIsGear] = useState(false); // false = Non-Gear, true = Gear
+
+  // KYC Document Photos (license, RC, Aadhar, insurance)
+  const [documents, setDocuments] = useState({
+    licenseImage: null,
+    rcImage: null,
+    aadharImage: null,
+    insuranceImage: null,
+  });
 
   // Operating Location (Country -> State -> City -> Zone, from live Master Data)
   const [locationTree, setLocationTree] = useState({});
@@ -125,6 +143,36 @@ const RegisterScreen = ({ navigation }) => {
     setAadharNo(numeric);
   };
 
+  const applyPickedDocument = (field, result) => {
+    if (result.didCancel || result.errorCode) return;
+
+    const asset = result.assets?.[0];
+    if (!asset?.uri) return;
+
+    setDocuments((prev) => ({
+      ...prev,
+      [field]: {
+        uri: asset.uri,
+        type: asset.type || 'image/jpeg',
+        fileName: asset.fileName || `${field}.jpg`,
+      },
+    }));
+  };
+
+  const pickDocument = (field, label) => {
+    Alert.alert(`Upload ${label}`, 'Choose a photo source', [
+      {
+        text: 'Take Photo',
+        onPress: async () => applyPickedDocument(field, await launchCamera({ mediaType: 'photo', quality: 0.7 })),
+      },
+      {
+        text: 'Choose from Gallery',
+        onPress: async () => applyPickedDocument(field, await launchImageLibrary({ mediaType: 'photo', quality: 0.7 })),
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
   const handleRegister = async () => {
     if (!name.trim()) {
       Alert.alert('Validation', 'Please enter your full name.');
@@ -166,27 +214,37 @@ const RegisterScreen = ({ navigation }) => {
       return;
     }
 
-    try {
-      const payload = {
-        name: name.trim(),
-        phone: phone.trim(),
-        email: email.trim().toLowerCase(),
-        password,
-        role: 'CAPTAIN',
-        aadharNo,
-        vehicleNo: vehicleNo.trim().toUpperCase(),
-        vehicleBrand,
-        vehicleModel: vehicleModel.trim(),
-        vehicleCategory,
-        isGear,
-        country,
-        state,
-        city,
-        zone,
-        source: 'App Self Registration',
-      };
+    const missingDoc = DOCUMENT_TYPES.find(({ field }) => !documents[field]);
+    if (missingDoc) {
+      Alert.alert('Validation', `Please attach a photo of your ${missingDoc.label}.`);
+      return;
+    }
 
-      const response = await registerUser(payload);
+    try {
+      const formData = new FormData();
+      formData.append('name', name.trim());
+      formData.append('phone', phone.trim());
+      formData.append('email', email.trim().toLowerCase());
+      formData.append('password', password);
+      formData.append('role', 'CAPTAIN');
+      formData.append('aadharNo', aadharNo);
+      formData.append('vehicleNo', vehicleNo.trim().toUpperCase());
+      formData.append('vehicleBrand', vehicleBrand);
+      formData.append('vehicleModel', vehicleModel.trim());
+      formData.append('vehicleCategory', vehicleCategory);
+      formData.append('isGear', String(isGear));
+      formData.append('country', country);
+      formData.append('state', state);
+      formData.append('city', city);
+      formData.append('zone', zone);
+      formData.append('source', 'App Self Registration');
+
+      DOCUMENT_TYPES.forEach(({ field }) => {
+        const doc = documents[field];
+        formData.append(field, { uri: doc.uri, type: doc.type, name: doc.fileName });
+      });
+
+      const response = await registerUser(formData);
       const authData = response.data || response;
       const token = authData.token || 'CAPTAIN_TOKEN_' + Date.now();
       const user = authData.user || { name, email, role: 'CAPTAIN', status: 'PENDING_VERIFICATION' };
@@ -294,7 +352,30 @@ const RegisterScreen = ({ navigation }) => {
             placeholder="Select zone"
           />
 
-          <Text style={styles.sectionHeader}>4. Account Security</Text>
+          <Text style={styles.sectionHeader}>4. Document Uploads</Text>
+          {DOCUMENT_TYPES.map(({ field, label }) => {
+            const doc = documents[field];
+            return (
+              <TouchableOpacity
+                key={field}
+                style={styles.docRow}
+                onPress={() => pickDocument(field, label)}
+                activeOpacity={0.8}
+              >
+                {doc ? (
+                  <Image source={{ uri: doc.uri }} style={styles.docThumbnail} />
+                ) : (
+                  <View style={styles.docThumbnailPlaceholder} />
+                )}
+                <View style={styles.docTextWrap}>
+                  <Text style={styles.docLabel}>{label}</Text>
+                  <Text style={styles.docStatus}>{doc ? 'Attached — tap to replace' : 'Tap to attach photo'}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+
+          <Text style={styles.sectionHeader}>5. Account Security</Text>
           <AppInput label="Password" value={password} onChangeText={setPassword} placeholder="Create password" secureTextEntry />
           <AppInput label="Confirm Password" value={confirmPassword} onChangeText={setConfirmPassword} placeholder="Confirm password" secureTextEntry />
 
@@ -377,6 +458,41 @@ const styles = StyleSheet.create({
   radioTextSelected: {
     color: '#FF6600',
     fontWeight: '700',
+  },
+  docRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    marginBottom: 10,
+  },
+  docThumbnail: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+  },
+  docThumbnailPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: '#E2E8F0',
+  },
+  docTextWrap: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  docLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  docStatus: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
   },
   form: {
     width: '100%',

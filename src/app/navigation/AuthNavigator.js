@@ -6,14 +6,23 @@ import {
 
 import LoginScreen from '../../screens/auth/LoginScreen';
 import RegisterScreen from '../../screens/auth/RegisterScreen';
+import OnboardingScreen from '../../screens/onboarding/OnboardingScreen';
 
 const Stack = createNativeStackNavigator();
 
-const AuthNavigator = () => {
+const AuthNavigator = ({hasSeenOnboarding}) => {
   return (
     <Stack.Navigator
-      initialRouteName="Login"
+      initialRouteName={hasSeenOnboarding ? 'Login' : 'Onboarding'}
     >
+      <Stack.Screen
+        name="Onboarding"
+        component={OnboardingScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+
       <Stack.Screen
         name="Login"
         component={LoginScreen}

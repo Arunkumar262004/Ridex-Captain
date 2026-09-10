@@ -24,6 +24,11 @@ const acceptRide = async (rideId) => {
   return response.data;
 };
 
+const rejectRide = async (rideId) => {
+  const response = await api.post(`/rides/${rideId}/reject`);
+  return response.data;
+};
+
 const captainArrived = async (rideId) => {
   const response = await api.post(`/rides/${rideId}/arrived`);
   return response.data;
@@ -57,6 +62,7 @@ export {
   getFareEstimate,
   createRide,
   acceptRide,
+  rejectRide,
   captainArrived,
   getDynamicQrToken,
   verifyQrAndStartRide,

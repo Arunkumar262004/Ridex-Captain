@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'r
 import io from 'socket.io-client';
 import RideMap from '../../components/map/RideMap';
 import { startLiveLocationTracking, stopLiveLocationTracking } from '../../services/location/locationService';
+import { SOCKET_URL } from '../../constants/config';
 
 const CaptainActiveRideScreen = ({ route, navigation }) => {
   const { ride } = route.params || {};
@@ -21,7 +22,7 @@ const CaptainActiveRideScreen = ({ route, navigation }) => {
     let watchId;
 
     try {
-      socket = io('http://10.0.2.2:5000');
+      socket = io(SOCKET_URL);
       socket.emit('join_ride_room', rideId);
 
       // Start live GPS tracking & emitting coordinates to customer room
@@ -29,6 +30,13 @@ const CaptainActiveRideScreen = ({ route, navigation }) => {
         setCaptainLocation(newLocation);
       }).then(id => {
         watchId = id;
+        if (id === null) {
+          console.log('Live location tracking did not start: permission denied or socket unavailable');
+          Alert.alert('Location Unavailable', 'Could not start live location tracking. Please check that location permission is granted.');
+        }
+      }).catch(error => {
+        console.log('Live location tracking failed to start:', error);
+        Alert.alert('Location Unavailable', 'Could not start live location tracking. Please check that location permission is granted.');
       });
     } catch (e) {
       console.log('Captain socket tracking offline fallback');
