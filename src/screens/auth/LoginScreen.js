@@ -22,6 +22,8 @@ import {
   loginUser,
 } from '../../services/api/authApi';
 
+import {setAuthToken} from '../../services/api/axios';
+
 import {
   loginStart,
   loginSuccess,
@@ -96,6 +98,8 @@ const LoginScreen = ({navigation}) => {
         token,
         user,
       });
+
+      setAuthToken(token);
 
       dispatch(
         loginSuccess({

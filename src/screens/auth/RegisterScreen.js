@@ -26,6 +26,7 @@ import { registerUser } from '../../services/api/authApi';
 import { getVehicleBrands, getVehicleCategories, getLocationTree } from '../../services/api/masterDataApi';
 import { loginSuccess } from '../../app/store/slices/authSlice';
 import { saveAuthData } from '../../utils/storage';
+import { setAuthToken } from '../../services/api/axios';
 
 const DOCUMENT_TYPES = [
   { field: 'licenseImage', label: 'Driving License' },
@@ -250,6 +251,7 @@ const RegisterScreen = ({ navigation }) => {
       const user = authData.user || { name, email, role: 'CAPTAIN', status: 'PENDING_VERIFICATION' };
 
       await saveAuthData({ token, user });
+      setAuthToken(token);
       dispatch(loginSuccess({ token, user }));
 
       Alert.alert(

@@ -8,6 +8,7 @@ import AuthNavigator from './AuthNavigator';
 import CaptainNavigator from './CaptainNavigator';
 import {setAuth, setInitialized} from '../store/slices/authSlice';
 import {getAuthData} from '../../utils/storage';
+import {setAuthToken} from '../../services/api/axios';
 import colors from '../../constants/colors';
 
 const ONBOARDING_SEEN_KEY = 'ridex_captain_onboarding_seen';
@@ -29,6 +30,8 @@ const RootNavigator = () => {
 
       const authData = await getAuthData();
       if (authData?.token && authData?.user) {
+        setAuthToken(authData.token);
+
         dispatch(
           setAuth({
             token: authData.token,

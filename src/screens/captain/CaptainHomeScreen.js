@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,87 @@ import {
   SafeAreaView,
   ScrollView,
 } from 'react-native';
+import Geolocation from '@react-native-community/geolocation';
+import io from 'socket.io-client';
+import { requestLocationPermission } from '../../services/location/locationService';
+import { updateCaptainLocation, setCaptainOffline } from '../../services/api/userApi';
+import { SOCKET_URL } from '../../constants/config';
 
 const CaptainHomeScreen = ({ navigation }) => {
   const [isOnline, setIsOnline] = useState(true);
+  const watchIdRef = useRef(null);
+  const requestSocketRef = useRef(null);
+
+  // Listens for new ride requests while online. There's no per-captain
+  // radius/vehicle-type dispatch yet (see ride.controller.js -
+  // createRide just broadcasts to every connected socket), so this is a
+  // simple "show me whatever comes in while I'm online" listener, not a
+  // real matching engine - good enough to see and act on a request, but
+  // every online captain currently sees every ride.
+  useEffect(() => {
+    if (!isOnline) {
+      if (requestSocketRef.current) {
+        requestSocketRef.current.disconnect();
+        requestSocketRef.current = null;
+      }
+      return undefined;
+    }
+
+    const socket = io(SOCKET_URL);
+    requestSocketRef.current = socket;
+
+    socket.on('new_ride_available', ride => {
+      navigation.navigate('RideRequest', { ride });
+    });
+
+    return () => {
+      socket.disconnect();
+      requestSocketRef.current = null;
+    };
+  }, [isOnline, navigation]);
+
+  // Reports live position to the server only while the online switch is on
+  // - this is exactly what backs the "nearby partner" markers customers see
+  // on the vehicle-selection map, so a captain has to actually be online
+  // and pinging to show up there.
+  useEffect(() => {
+    if (!isOnline) {
+      if (watchIdRef.current != null) {
+        Geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      setCaptainOffline().catch(() => {});
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      const hasPermission = await requestLocationPermission();
+      if (cancelled || !hasPermission) return;
+
+      watchIdRef.current = Geolocation.watchPosition(
+        position => {
+          const { latitude, longitude } = position.coords;
+          updateCaptainLocation({ latitude, longitude }).catch(() => {});
+        },
+        error => console.log('Presence location watch error:', error),
+        {
+          enableHighAccuracy: true,
+          distanceFilter: 25,
+          interval: 8000,
+        },
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+      if (watchIdRef.current != null) {
+        Geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+    };
+  }, [isOnline]);
 
   return (
     <SafeAreaView style={styles.container}>

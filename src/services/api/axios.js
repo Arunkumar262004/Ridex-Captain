@@ -9,6 +9,25 @@ const api = axios.create({
   },
 });
 
+let authToken = null;
+
+const setAuthToken = token => {
+  authToken = token;
+};
+
+// Every route this app calls (accept/reject ride, captain-location, FCM
+// token, etc.) is behind the server's `authenticate` middleware, so without
+// this every request would 401 once the token isn't set here.
+api.interceptors.request.use(config => {
+  if (authToken) {
+    config.headers.Authorization = `Bearer ${authToken}`;
+  }
+
+  return config;
+});
+
+export {setAuthToken};
+
 // The default 'application/json' header above makes axios try to
 // JSON-serialize any FormData body instead of sending it as multipart
 // (React Native's FormData doesn't support the iteration that conversion
